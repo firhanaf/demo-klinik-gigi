@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DentalRecord — Demo Sistem Klinik Gigi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal: #0A6B53; --teal-l: #E3F5F0; --teal-m: #1D9E75; --teal-d: #074D3C;
+  --bg: #F7F8F6; --bg2: #EDEEE9; --surface: #FFFFFF;
+  --text: #1A1F1C; --text2: #5A6360; --text3: #9AA49F;
+  --border: #DDE1DC; --border2: #C8CEC9;
+  --accent: #E8F5F0; --danger: #FEF2F2; --danger-t: #DC2626;
+  --amber: #FEF3C7; --amber-t: #92400E;
+  --radius: 10px; --radius-lg: 16px;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,.08);
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ── TOPBAR ── */
+.topbar { height: 56px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 0; position: sticky; top: 0; z-index: 100; }
+.logo { display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 15px; color: var(--teal-d); letter-spacing: -.3px; text-decoration: none; }
+.logo-mark { width: 30px; height: 30px; background: var(--teal); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.logo-mark svg { width: 16px; height: 16px; fill: white; }
+.topbar-nav { display: flex; gap: 2px; margin-left: 32px; }
+.nav-btn { padding: 6px 14px; border-radius: 8px; border: none; background: transparent; font-family: var(--font); font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; transition: all .15s; }
+.nav-btn:hover { background: var(--bg); color: var(--text); }
+.nav-btn.active { background: var(--teal-l); color: var(--teal); }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.demo-badge { background: var(--amber); color: var(--amber-t); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; letter-spacing: .3px; }
+.user-chip { display: flex; align-items: center; gap: 8px; padding: 5px 10px 5px 6px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; transition: background .15s; font-size: 13px; }
+.user-chip:hover { background: var(--bg); }
+.avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--teal-l); color: var(--teal); font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.avatar.blue { background: #EFF6FF; color: #1D4ED8; }
+
+/* ── LAYOUT ── */
+.main { flex: 1; padding: 24px; max-width: 1200px; margin: 0 auto; width: 100%; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── CARDS & SURFACES ── */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+.card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.card-body { padding: 20px; }
+
+/* ── STAT GRID ── */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 20px; position: relative; overflow: hidden; }
+.stat::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--teal); border-radius: 3px 3px 0 0; opacity: 0; transition: opacity .2s; }
+.stat:hover::before { opacity: 1; }
+.stat-label { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
+.stat-value { font-size: 26px; font-weight: 600; color: var(--text); letter-spacing: -1px; }
+.stat-value.teal { color: var(--teal); }
+.stat-delta { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.stat-delta span { color: var(--teal-m); font-weight: 500; }
+
+/* ── SEARCH BAR ── */
+.toolbar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
+.search-wrap { position: relative; flex: 1; }
+.search-wrap svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; stroke: var(--text3); fill: none; pointer-events: none; }
+.search-input { width: 100%; height: 38px; padding: 0 12px 0 36px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); font-family: var(--font); font-size: 13px; color: var(--text); outline: none; transition: border-color .15s; }
+.search-input:focus { border-color: var(--teal-m); }
+.search-input::placeholder { color: var(--text3); }
+select.filter { height: 38px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); font-family: var(--font); font-size: 13px; color: var(--text2); outline: none; cursor: pointer; min-width: 140px; }
+.btn { height: 38px; padding: 0 16px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); font-family: var(--font); font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .15s; white-space: nowrap; }
+.btn:hover { background: var(--bg); border-color: var(--border2); }
+.btn-primary { background: var(--teal); color: white; border-color: var(--teal); }
+.btn-primary:hover { background: var(--teal-d); border-color: var(--teal-d); }
+.btn-sm { height: 30px; padding: 0 11px; font-size: 12px; }
+.btn-ghost { border-color: transparent; background: transparent; }
+.btn-ghost:hover { background: var(--bg); border-color: var(--border); }
+.btn-success { background: #F0FDF4; color: #15803D; border-color: #BBF7D0; }
+.btn-success:hover { background: #DCFCE7; }
+.btn-danger { background: var(--danger); color: var(--danger-t); border-color: #FECACA; }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; background: var(--bg); border-bottom: 1px solid var(--border); white-space: nowrap; }
+tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { transition: background .1s; cursor: pointer; }
+tbody tr:hover td { background: var(--accent); }
+.mono { font-family: var(--mono); font-size: 12px; color: var(--text2); }
+.name-cell { display: flex; align-items: center; gap: 10px; }
+.av-sm { width: 30px; height: 30px; border-radius: 50%; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.name-cell strong { font-weight: 500; font-size: 13px; }
+
+/* ── BADGES ── */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.badge-aktif { background: #F0FDF4; color: #15803D; } .badge-aktif::before { background: #22C55E; }
+.badge-baru { background: #EFF6FF; color: #1D4ED8; } .badge-baru::before { background: #3B82F6; }
+.badge-kontrol { background: var(--amber); color: var(--amber-t); } .badge-kontrol::before { background: #F59E0B; }
+.badge-perlu { background: var(--danger); color: var(--danger-t); } .badge-perlu::before { background: #EF4444; }
+
+/* ── DETAIL PAGE ── */
+.detail-back { display: flex; align-items: center; gap: 8px; color: var(--text2); font-size: 13px; cursor: pointer; margin-bottom: 20px; font-weight: 500; width: fit-content; transition: color .15s; }
+.detail-back:hover { color: var(--teal); }
+.detail-back svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
+.detail-header { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 20px; }
+.av-lg { width: 56px; height: 56px; border-radius: 50%; font-size: 18px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.patient-name { font-size: 20px; font-weight: 600; letter-spacing: -.4px; margin-bottom: 6px; }
+.patient-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text2); flex-wrap: wrap; margin-bottom: 14px; }
+.patient-meta span { display: flex; align-items: center; gap: 4px; }
+.info-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.info-chip { padding: 4px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; color: var(--text2); }
+.info-chip strong { color: var(--text); font-weight: 500; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.detail-col { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── VISIT HISTORY ── */
+.visit-item { padding: 14px 16px; border-left: 3px solid var(--teal-m); background: var(--bg); border-radius: 0 var(--radius) var(--radius) 0; margin-bottom: 10px; transition: background .15s; }
+.visit-item:hover { background: var(--accent); }
+.visit-date { font-size: 11px; color: var(--text3); margin-bottom: 4px; display: flex; gap: 8px; }
+.visit-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.visit-note { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.visit-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.visit-cost { font-size: 12px; font-weight: 600; color: var(--teal); }
+.visit-doctor { font-size: 11px; color: var(--text3); }
+
+/* ── ATTACHMENTS ── */
+.attach-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; transition: border-color .15s; cursor: pointer; }
+.attach-item:hover { border-color: var(--teal-m); background: var(--accent); }
+.attach-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; letter-spacing: .5px; }
+.attach-pdf { background: #FEF2F2; color: #991B1B; }
+.attach-img { background: #EFF6FF; color: #1E40AF; }
+.attach-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.attach-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.attach-actions { margin-left: auto; display: flex; gap: 6px; }
+
+/* ── FORM PAGE ── */
+.form-section { margin-bottom: 20px; }
+.form-section-title { font-size: 12px; font-weight: 600; color: var(--teal); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--teal-l); display: flex; align-items: center; gap: 8px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label { font-size: 12px; font-weight: 500; color: var(--text2); }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 11px; border: 1px solid var(--border); border-radius: var(--radius); font-family: var(--font); font-size: 13px; color: var(--text); background: var(--surface); outline: none; transition: border-color .15s; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--teal-m); }
+.form-group textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+.form-group input[readonly] { background: var(--bg); color: var(--text2); }
+.upload-zone { border: 2px dashed var(--border2); border-radius: var(--radius-lg); padding: 28px 20px; text-align: center; cursor: pointer; transition: all .2s; }
+.upload-zone:hover { border-color: var(--teal-m); background: var(--accent); }
+.upload-zone-icon { width: 40px; height: 40px; background: var(--teal-l); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+.upload-zone-icon svg { width: 20px; height: 20px; stroke: var(--teal); fill: none; }
+.upload-zone p { font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 4px; }
+.upload-zone small { font-size: 11px; color: var(--text3); }
+.uploaded-list { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+/* ── MODAL ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal { background: var(--surface); border-radius: var(--radius-lg); padding: 28px; max-width: 480px; width: 90%; box-shadow: var(--shadow-lg); transform: translateY(8px); transition: transform .2s; }
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.modal-sub { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal-d); color: white; padding: 12px 18px; border-radius: var(--radius-lg); font-size: 13px; font-weight: 500; z-index: 999; display: flex; align-items: center; gap: 10px; transform: translateY(80px); transition: transform .3s cubic-bezier(.34,1.56,.64,1); pointer-events: none; }
+.toast.show { transform: translateY(0); }
+.toast svg { width: 16px; height: 16px; stroke: #9FE1CB; fill: none; }
+
+/* ── EXPORT PREVIEW ── */
+.export-preview { background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; font-size: 12px; }
+.export-preview table { font-size: 11px; }
+.export-preview thead th { background: var(--teal); color: white; font-size: 10px; padding: 7px 10px; }
+.export-preview tbody td { padding: 7px 10px; font-size: 11px; }
+.export-preview tbody tr:nth-child(even) td { background: var(--teal-l); }
+
+/* ── PAGE TRANSITIONS ── */
+.page { animation: fadeUp .2s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ── ROLE INDICATOR ── */
+.role-bar { background: var(--teal-l); border-bottom: 1px solid #C8E6DC; padding: 6px 24px; font-size: 12px; color: var(--teal-d); display: flex; align-items: center; gap: 8px; }
+.role-bar.readonly { background: var(--amber); border-color: #FDE68A; color: var(--amber-t); }
+.role-toggle { margin-left: auto; cursor: pointer; font-weight: 600; text-decoration: underline; }
+
+/* ── EMPTY STATE ── */
+.empty { text-align: center; padding: 48px 20px; }
+.empty-icon { width: 48px; height: 48px; background: var(--bg2); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+.empty-icon svg { width: 24px; height: 24px; stroke: var(--text3); fill: none; }
+.empty p { color: var(--text3); font-size: 13px; }
+
+/* ── SUMMARY NUMBERS ── */
+.fin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fin-card { background: var(--bg); border-radius: var(--radius); padding: 12px 14px; }
+.fin-label { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--text3); font-weight: 500; margin-bottom: 4px; }
+.fin-val { font-size: 17px; font-weight: 600; color: var(--teal); }
+</style>
+</head>
+<body>
+
+<!-- ROLE BAR -->
+<div class="role-bar" id="roleBar">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  Login sebagai: <strong id="roleLabel">drg. Santi Rahayu</strong> &nbsp;·&nbsp; Role: <strong>Write (Dokter)</strong>
+  <span class="role-toggle" onclick="toggleRole()">Ganti ke Readonly (Suster)</span>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <a class="logo" href="#" onclick="showPage('list')">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 3.25 1.9 6.07 4.7 7.44L10 21h4l.3-4.56C17.1 15.07 19 12.25 19 9c0-3.87-3.13-7-7-7z"/></svg>
+    </div>
+    DentalRecord
+  </a>
+  <div class="topbar-nav">
+    <button class="nav-btn active" id="nav-list" onclick="showPage('list')">Data Pasien</button>
+    <button class="nav-btn" id="nav-form" onclick="showPage('form')">Input Pasien</button>
+    <button class="nav-btn" id="nav-report" onclick="showPage('report')">Laporan</button>
+  </div>
+  <div class="topbar-right">
+    <span class="demo-badge">DEMO</span>
+    <div class="user-chip">
+      <div class="avatar" id="userAvatar">SR</div>
+      <span id="userName">drg. Santi</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ LIST PAGE ══════════════ -->
+<div class="main">
+<div class="page active" id="page-list">
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Total Pasien</div>
+      <div class="stat-value teal">248</div>
+      <div class="stat-delta"><span>+12</span> bulan ini</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Kunjungan Bulan Ini</div>
+      <div class="stat-value">87</div>
+      <div class="stat-delta"><span>+5</span> vs bulan lalu</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Jadwal Hari Ini</div>
+      <div class="stat-value">8</div>
+      <div class="stat-delta">3 sudah selesai</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Perlu Kontrol</div>
+      <div class="stat-value">24</div>
+      <div class="stat-delta">Lebih dari 3 bulan</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Daftar Pasien</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-success btn-sm" onclick="showExportModal()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Excel
+        </button>
+        <button class="btn btn-primary btn-sm" id="addBtn" onclick="showPage('form')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Pasien Baru
+        </button>
+      </div>
+    </div>
+
+    <div style="padding:14px 16px; border-bottom:1px solid var(--border);">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" type="text" placeholder="Cari nama, No. RM, atau nomor telepon..." oninput="filterTable(this.value)" id="searchInput">
+        </div>
+        <select class="filter" onchange="filterTable(document.getElementById('searchInput').value)" id="filterStatus">
+          <option value="">Semua Status</option>
+          <option value="Aktif">Aktif</option>
+          <option value="Baru">Baru</option>
+          <option value="Perlu Kontrol">Perlu Kontrol</option>
+        </select>
+        <select class="filter" onchange="filterTable(document.getElementById('searchInput').value)" id="filterCabang">
+          <option value="">Semua Cabang</option>
+          <option value="Cabang Utama">Cabang Utama</option>
+          <option value="Cabang 2">Cabang 2</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Pasien</th>
+            <th>No. RM</th>
+            <th>Usia / JK</th>
+            <th>No. Telepon</th>
+            <th>Diagnosis Terakhir</th>
+            <th>Kunjungan Terakhir</th>
+            <th>Cabang</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="patientTableBody"></tbody>
+      </table>
+      <div id="emptyState" class="empty" style="display:none;">
+        <div class="empty-icon"><svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <p>Tidak ada pasien yang cocok</p>
+      </div>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:12px;color:var(--text3);" id="rowCount">Menampilkan 8 pasien</span>
+      <div style="display:flex;gap:4px;">
+        <button class="btn btn-sm">← Prev</button>
+        <button class="btn btn-sm" style="background:var(--teal-l);color:var(--teal);border-color:var(--teal-l);">1</button>
+        <button class="btn btn-sm">2</button>
+        <button class="btn btn-sm">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ DETAIL PAGE ══════════════ -->
+<div class="page" id="page-detail">
+  <div class="detail-back" onclick="showPage('list')">
+    <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    Kembali ke daftar
+  </div>
+
+  <div class="detail-header">
+    <div class="av-lg" id="detAvatar" style="background:#E3F5F0;color:#0A6B53;"></div>
+    <div style="flex:1;">
+      <div class="patient-name" id="detName">—</div>
+      <div class="patient-meta">
+        <span>📋 <span id="detRM">—</span></span>
+        <span>🎂 <span id="detAge">—</span></span>
+        <span>📞 <span id="detPhone">—</span></span>
+        <span>🏥 <span id="detCabang">—</span></span>
+      </div>
+      <div class="info-chips" id="detChips"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-start;">
+      <button class="btn btn-success btn-sm" onclick="showExportModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+      <button class="btn btn-primary btn-sm" id="addVisitBtn" onclick="showPage('form')">+ Kunjungan</button>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="detail-col">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Riwayat Kunjungan</span><span style="font-size:12px;color:var(--text3);" id="visitCount"></span></div>
+        <div class="card-body" id="visitList"></div>
+      </div>
+    </div>
+    <div class="detail-col">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Lampiran & Dokumen</span>
+          <button class="btn btn-sm" id="uploadBtnDetail" onclick="simulateUploadDetail()">+ Upload</button>
+        </div>
+        <div class="card-body" id="attachList"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Ringkasan Keuangan</span></div>
+        <div class="card-body">
+          <div class="fin-grid" id="finGrid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ FORM PAGE ══════════════ -->
+<div class="page" id="page-form">
+  <div class="detail-back" onclick="showPage('list')">
+    <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    Kembali ke daftar
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 380px;gap:16px;">
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><span class="card-title">Data Pribadi Pasien</span></div>
+        <div class="card-body">
+          <div class="form-section">
+            <div class="form-grid">
+              <div class="form-group full">
+                <label>Nama Lengkap <span style="color:red">*</span></label>
+                <input type="text" placeholder="Sesuai KTP">
+              </div>
+              <div class="form-group">
+                <label>No. Rekam Medis</label>
+                <input type="text" value="RM-2025-249" readonly>
+              </div>
+              <div class="form-group">
+                <label>NIK / No. KTP</label>
+                <input type="text" placeholder="16 digit">
+              </div>
+              <div class="form-group">
+                <label>Tanggal Lahir <span style="color:red">*</span></label>
+                <input type="date">
+              </div>
+              <div class="form-group">
+                <label>Jenis Kelamin <span style="color:red">*</span></label>
+                <select><option value="">-- Pilih --</option><option>Laki-laki</option><option>Perempuan</option></select>
+              </div>
+              <div class="form-group">
+                <label>No. Telepon / WhatsApp <span style="color:red">*</span></label>
+                <input type="tel" placeholder="08xx-xxxx-xxxx">
+              </div>
+              <div class="form-group">
+                <label>Pekerjaan</label>
+                <input type="text" placeholder="Opsional">
+              </div>
+              <div class="form-group full">
+                <label>Alamat Lengkap</label>
+                <textarea placeholder="Jalan, RT/RW, Kelurahan, Kota..."></textarea>
+              </div>
+              <div class="form-group">
+                <label>Alergi / Kondisi Khusus</label>
+                <input type="text" placeholder="Contoh: alergi penisilin">
+              </div>
+              <div class="form-group">
+                <label>Cabang <span style="color:red">*</span></label>
+                <select><option>Cabang Utama</option><option>Cabang 2</option></select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Data Kunjungan & Medis</span></div>
+        <div class="card-body">
+          <div class="form-section">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Tanggal Kunjungan <span style="color:red">*</span></label>
+                <input type="date" id="visitDateInput">
+              </div>
+              <div class="form-group">
+                <label>Dokter Pemeriksa</label>
+                <select><option>drg. Santi Rahayu</option><option>drg. Bowo Prakoso</option></select>
+              </div>
+              <div class="form-group full">
+                <label>Keluhan Utama <span style="color:red">*</span></label>
+                <textarea placeholder="Keluhan yang disampaikan pasien..."></textarea>
+              </div>
+              <div class="form-group full">
+                <label>Diagnosis</label>
+                <textarea placeholder="Diagnosis dokter..."></textarea>
+              </div>
+              <div class="form-group full">
+                <label>Tindakan / Rencana Perawatan</label>
+                <textarea placeholder="Tindakan yang dilakukan atau direncanakan..."></textarea>
+              </div>
+              <div class="form-group">
+                <label>Gigi yang Ditangani</label>
+                <input type="text" placeholder="Contoh: 16, 17, 36">
+              </div>
+              <div class="form-group">
+                <label>Biaya Perawatan (Rp)</label>
+                <input type="text" placeholder="0" oninput="formatBiaya(this)">
+              </div>
+              <div class="form-group">
+                <label>Jadwal Kontrol Berikutnya</label>
+                <input type="date">
+              </div>
+              <div class="form-group">
+                <label>Catatan Tambahan</label>
+                <input type="text" placeholder="Opsional">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: Upload -->
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><span class="card-title">Upload Lampiran</span></div>
+        <div class="card-body">
+          <div class="upload-zone" onclick="simulateUpload()">
+            <div class="upload-zone-icon">
+              <svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <p>Klik untuk upload file</p>
+            <small>PDF, JPG, PNG — maks. 20MB per file</small>
+          </div>
+          <div class="uploaded-list" id="uploadedList">
+            <div class="attach-item">
+              <div class="attach-icon attach-pdf">PDF</div>
+              <div><div class="attach-name">rontgen_panoramic.pdf</div><div class="attach-meta">1.2 MB · baru saja</div></div>
+              <div class="attach-actions"><button class="btn btn-sm btn-danger" style="height:26px;padding:0 8px;font-size:11px;">✕</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Pratinjau Data</span></div>
+        <div class="card-body" style="font-size:12px;color:var(--text2);line-height:1.8;">
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;justify-content:space-between;"><span>No. RM</span><span style="font-family:var(--mono);font-size:12px;color:var(--teal);">RM-2025-249</span></div>
+            <div style="height:1px;background:var(--border);"></div>
+            <div style="display:flex;justify-content:space-between;"><span>Tanggal input</span><span id="previewDate" style="color:var(--text);">—</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>Operator</span><span style="color:var(--text);" id="previewOp">drg. Santi Rahayu</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>Lampiran</span><span style="color:var(--text);" id="previewFiles">1 file</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button class="btn" onclick="showPage('list')">Batal</button>
+    <button class="btn btn-primary" onclick="savePatient()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Simpan Data Pasien
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════ REPORT PAGE ══════════════ -->
+<div class="page" id="page-report">
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-header">
+      <span class="card-title">Export & Laporan</span>
+    </div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;">
+        <div class="form-group"><label>Dari Tanggal</label><input type="date" value="2025-04-01"></div>
+        <div class="form-group"><label>Sampai Tanggal</label><input type="date" value="2025-04-30"></div>
+        <div class="form-group"><label>Cabang</label><select><option>Semua Cabang</option><option>Cabang Utama</option><option>Cabang 2</option></select></div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-success" onclick="showExportModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Data Pasien (.xlsx)
+        </button>
+        <button class="btn btn-success" onclick="showToast('Laporan kunjungan berhasil diekspor!')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Laporan Kunjungan (.xlsx)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">Pratinjau Data Export — April 2025</span></div>
+    <div class="card-body" style="padding:0;">
+      <div class="export-preview">
+        <table style="width:100%;">
+          <thead><tr>
+            <th>No. RM</th><th>Nama Pasien</th><th>Tgl Lahir</th><th>Telepon</th><th>Tgl Kunjungan</th><th>Diagnosis</th><th>Tindakan</th><th>Biaya (Rp)</th><th>Dokter</th><th>Cabang</th>
+          </tr></thead>
+          <tbody id="exportPreviewBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .main -->
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <div class="modal-title">Export ke Excel</div>
+    <div class="modal-sub">Data akan diekspor dalam format .xlsx siap dibuka di Microsoft Excel atau Google Sheets.</div>
+    <div style="background:var(--bg);border-radius:var(--radius);padding:14px;font-size:13px;margin-bottom:4px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text2);">Format file</span><span style="font-weight:500;">.xlsx (Excel 2007+)</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text2);">Jumlah baris</span><span style="font-weight:500;">248 pasien</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2);">Kolom</span><span style="font-weight:500;">No. RM, Nama, Diagnosis, Biaya, dll.</span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="doExport()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download .xlsx
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastMsg">Berhasil!</span>
+</div>
+
+<script>
+// ── DATA ──
+const patients = [
+  { id:1, name:'Andi Rahmawan', initials:'AR', color:'#E3F5F0', textColor:'#0A6B53', rm:'RM-2024-001', age:34, jk:'L', phone:'0812-3456-7890', dx:'Karies gigi molar', lastVisit:'12 Apr 2025', status:'Aktif', cabang:'Cabang Utama',
+    alergi:'Tidak ada', pekerjaan:'Karyawan Swasta', alamat:'Jl. Mawar No. 12, Jakarta Selatan',
+    visits:[
+      { date:'12 Apr 2025', doctor:'drg. Santi Rahayu', title:'Penambalan Karies Gigi 16', note:'Penambalan komposit pada gigi 16. Pasien kooperatif, tidak ada komplikasi.', gigi:'16', cost:350000 },
+      { date:'5 Feb 2025', doctor:'drg. Bowo Prakoso', title:'Scaling & Polishing', note:'Karang gigi menyeluruh, scaling ultrasonik dan polishing. Edukasi kebersihan mulut.', gigi:'-', cost:200000 },
+      { date:'10 Okt 2024', doctor:'drg. Santi Rahayu', title:'Konsultasi & Rontgen', note:'Kunjungan pertama. Foto rontgen panoramic. Diagnosa karies awal gigi 16, rencana tambal.', gigi:'16', cost:150000 },
+    ],
+    attachments:[
+      { type:'PDF', name:'rontgen_panoramic_okt2024.pdf', size:'2.4 MB', date:'10 Okt 2024' },
+      { type:'IMG', name:'foto_klinis_gigi16_apr2025.jpg', size:'1.1 MB', date:'12 Apr 2025' },
+      { type:'PDF', name:'informed_consent.pdf', size:'0.3 MB', date:'10 Okt 2024' },
+    ]
+  },
+  { id:2, name:'Siti Dewi Anggraini', initials:'SD', color:'#EFF6FF', textColor:'#1D4ED8', rm:'RM-2025-045', age:28, jk:'P', phone:'0856-9876-5432', dx:'Scaling & Polishing', lastVisit:'24 Apr 2025', status:'Baru', cabang:'Cabang Utama',
+    alergi:'Alergi lateks', pekerjaan:'Guru', alamat:'Jl. Melati No. 5, Depok',
+    visits:[
+      { date:'24 Apr 2025', doctor:'drg. Santi Rahayu', title:'Scaling & Polishing Pertama', note:'Kunjungan pertama. Karang gigi ringan. Scaling dan polishing selesai. Edukasi flossing.', gigi:'-', cost:200000 },
+    ],
+    attachments:[
+      { type:'IMG', name:'foto_klinis_awal.jpg', size:'0.9 MB', date:'24 Apr 2025' },
+    ]
+  },
+  { id:3, name:'Budi Hartono', initials:'BH', color:'#FEF3C7', textColor:'#92400E', rm:'RM-2024-089', age:45, jk:'L', phone:'0821-1111-2222', dx:'Pencabutan + Gigi palsu', lastVisit:'10 Mar 2025', status:'Perlu Kontrol', cabang:'Cabang 2',
+    alergi:'Tidak ada', pekerjaan:'Wiraswasta', alamat:'Jl. Sudirman No. 88, Bekasi',
+    visits:[
+      { date:'10 Mar 2025', doctor:'drg. Bowo Prakoso', title:'Fitting Gigi Tiruan Sebagian', note:'Fitting gigi tiruan akrilik sebagian regio posterior kiri bawah. Perlu kontrol 2 minggu.', gigi:'35,36,37', cost:1800000 },
+      { date:'14 Jan 2025', doctor:'drg. Bowo Prakoso', title:'Pencabutan Gigi 36 & 37', note:'Pencabutan gigi 36 dan 37 karena kerusakan mahkota parah. Pasien diberikan antibiotik.', gigi:'36,37', cost:500000 },
+    ],
+    attachments:[
+      { type:'PDF', name:'rontgen_periapikal_36_37.pdf', size:'1.8 MB', date:'14 Jan 2025' },
+      { type:'PDF', name:'resep_antibiotik.pdf', size:'0.2 MB', date:'14 Jan 2025' },
+    ]
+  },
+  { id:4, name:'Rina Lestari Putri', initials:'RL', color:'#FDF2F8', textColor:'#9D174D', rm:'RM-2025-012', age:31, jk:'P', phone:'0877-3333-4444', dx:'Ortodonti / Behel', lastVisit:'28 Apr 2025', status:'Aktif', cabang:'Cabang Utama',
+    alergi:'Tidak ada', pekerjaan:'Dokter', alamat:'Jl. Anggrek No. 3, Jakarta Barat',
+    visits:[
+      { date:'28 Apr 2025', doctor:'drg. Santi Rahayu', title:'Kontrol Behel Bulan 6', note:'Penggantian kawat ke 0.19x0.25 SS. Progress alignment baik. Overbite membaik.', gigi:'semua', cost:350000 },
+      { date:'28 Mar 2025', doctor:'drg. Santi Rahayu', title:'Kontrol Behel Bulan 5', note:'Penggantian kawat. Pasien diminta lebih rajin menggunakan elastik.', gigi:'semua', cost:350000 },
+      { date:'28 Feb 2025', doctor:'drg. Santi Rahayu', title:'Kontrol Behel Bulan 4', note:'Progress baik. Spacesudah menutup pada regio anterior.', gigi:'semua', cost:350000 },
+    ],
+    attachments:[
+      { type:'IMG', name:'foto_sebelum_orto.jpg', size:'2.1 MB', date:'28 Okt 2024' },
+      { type:'PDF', name:'rontgen_cefalometri.pdf', size:'3.4 MB', date:'28 Okt 2024' },
+      { type:'IMG', name:'progress_bulan_6.jpg', size:'1.5 MB', date:'28 Apr 2025' },
+    ]
+  },
+  { id:5, name:'Muhammad Prayoga', initials:'MP', color:'#F0FDF4', textColor:'#15803D', rm:'RM-2025-051', age:22, jk:'L', phone:'0895-5555-6666', dx:'Konsultasi awal', lastVisit:'29 Apr 2025', status:'Baru', cabang:'Cabang 2',
+    alergi:'Tidak ada', pekerjaan:'Mahasiswa', alamat:'Jl. Kenanga No. 7, Tangerang',
+    visits:[
+      { date:'29 Apr 2025', doctor:'drg. Bowo Prakoso', title:'Konsultasi & Pemeriksaan Awal', note:'Pasien datang dengan keluhan gigi bungsu tumbuh miring. Dirujuk foto panoramic.', gigi:'38,48', cost:100000 },
+    ],
+    attachments:[]
+  },
+  { id:6, name:'Yunita Sari Dewi', initials:'YS', color:'#F5F3FF', textColor:'#6D28D9', rm:'RM-2024-156', age:38, jk:'P', phone:'0813-7777-8888', dx:'Perawatan Saluran Akar', lastVisit:'5 Feb 2025', status:'Perlu Kontrol', cabang:'Cabang Utama',
+    alergi:'Tidak ada', pekerjaan:'Akuntan', alamat:'Jl. Dahlia No. 22, Bogor',
+    visits:[
+      { date:'5 Feb 2025', doctor:'drg. Santi Rahayu', title:'PSA Sesi 3 (Obturasi)', note:'Obturasi saluran akar gigi 21 dengan guta-percha. Pasien dianjurkan crown dalam 1 bulan.', gigi:'21', cost:900000 },
+      { date:'15 Jan 2025', doctor:'drg. Santi Rahayu', title:'PSA Sesi 2 (Preparasi)', note:'Preparasi saluran, irigasi NaOCl. Kavum ditutup sementara dengan cavit.', gigi:'21', cost:700000 },
+      { date:'8 Jan 2025', doctor:'drg. Santi Rahayu', title:'PSA Sesi 1 (Pembukaan)', note:'Keluhan: sakit berdenyut gigi 21. Foto periapikal. Pembukaan akses dan ekstirpasi pulpa.', gigi:'21', cost:500000 },
+    ],
+    attachments:[
+      { type:'PDF', name:'rontgen_periapikal_21_sebelum.pdf', size:'1.6 MB', date:'8 Jan 2025' },
+      { type:'PDF', name:'rontgen_periapikal_21_sesudah.pdf', size:'1.7 MB', date:'5 Feb 2025' },
+    ]
+  },
+  { id:7, name:'Hendra Kusuma', initials:'HK', color:'#FEF2F2', textColor:'#991B1B', rm:'RM-2023-201', age:52, jk:'L', phone:'0811-9999-0000', dx:'Implant konsultasi', lastVisit:'20 Apr 2025', status:'Aktif', cabang:'Cabang 2',
+    alergi:'Tidak ada', pekerjaan:'Direktur', alamat:'Jl. Cendana No. 1, Jakarta Pusat',
+    visits:[
+      { date:'20 Apr 2025', doctor:'drg. Bowo Prakoso', title:'Evaluasi Pre-Implant', note:'Konsultasi lanjutan untuk rencana implant regio 46. Bone density assessment.', gigi:'46', cost:500000 },
+    ],
+    attachments:[
+      { type:'PDF', name:'ct_scan_panoramic.pdf', size:'8.2 MB', date:'20 Apr 2025' },
+    ]
+  },
+  { id:8, name:'Dewi Permatasari', initials:'DP', color:'#ECFDF5', textColor:'#065F46', rm:'RM-2025-031', age:26, jk:'P', phone:'0857-2222-3333', dx:'Veneer / Estetik', lastVisit:'25 Apr 2025', status:'Aktif', cabang:'Cabang Utama',
+    alergi:'Tidak ada', pekerjaan:'Content Creator', alamat:'Jl. Bougenville No. 14, Serpong',
+    visits:[
+      { date:'25 Apr 2025', doctor:'drg. Santi Rahayu', title:'Veneer Porselen Gigi 11,12,21,22', note:'Preparasi minimal untuk 4 veneer porselen. Cetakan dan pengiriman ke lab.', gigi:'11,12,21,22', cost:8000000 },
+    ],
+    attachments:[
+      { type:'IMG', name:'smile_design_preview.jpg', size:'3.2 MB', date:'25 Apr 2025' },
+      { type:'PDF', name:'informed_consent_veneer.pdf', size:'0.4 MB', date:'25 Apr 2025' },
+    ]
+  },
+];
+
+// ── STATE ──
+let isReadonly = false;
+let currentPatient = null;
+let uploadCount = 1;
+let uploadCountDetail = 1;
+let toastTimer = null;
+
+// ── INIT ──
+function init() {
+  renderTable(patients);
+  renderExportPreview();
+  // set today's date
+  const today = new Date().toISOString().split('T')[0];
+  const vdi = document.getElementById('visitDateInput');
+  if(vdi) vdi.value = today;
+  document.getElementById('previewDate').textContent = new Date().toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'});
+}
+
+// ── PAGE NAV ──
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const navEl = document.getElementById('nav-' + page);
+  if(navEl) navEl.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── ROLE TOGGLE ──
+function toggleRole() {
+  isReadonly = !isReadonly;
+  const bar = document.getElementById('roleBar');
+  const label = document.getElementById('roleLabel');
+  const userName = document.getElementById('userName');
+  const userAvatar = document.getElementById('userAvatar');
+  const addBtn = document.getElementById('addBtn');
+  const addVisitBtn = document.getElementById('addVisitBtn');
+  const uploadBtnDetail = document.getElementById('uploadBtnDetail');
+  const roleToggle = document.querySelector('.role-toggle');
+
+  if(isReadonly) {
+    bar.classList.add('readonly');
+    label.textContent = 'Sri Wahyuni';
+    document.querySelector('#roleBar strong:nth-child(2)').textContent = 'Readonly (Suster)';
+    userName.textContent = 'Sri Wahyuni';
+    userAvatar.textContent = 'SW'; userAvatar.className = 'avatar blue';
+    if(addBtn) { addBtn.disabled = true; addBtn.style.opacity = '.4'; addBtn.title = 'Akses write diperlukan'; }
+    if(addVisitBtn) { addVisitBtn.disabled = true; addVisitBtn.style.opacity = '.4'; }
+    if(uploadBtnDetail) { uploadBtnDetail.disabled = true; uploadBtnDetail.style.opacity = '.4'; }
+    document.getElementById('previewOp').textContent = 'Sri Wahyuni';
+    roleToggle.textContent = 'Ganti ke Write (Dokter)';
+    showToast('Mode readonly aktif — aksi tambah/edit dinonaktifkan');
+  } else {
+    bar.classList.remove('readonly');
+    label.textContent = 'drg. Santi Rahayu';
+    document.querySelector('#roleBar strong:nth-child(2)').textContent = 'Write (Dokter)';
+    userName.textContent = 'drg. Santi';
+    userAvatar.textContent = 'SR'; userAvatar.className = 'avatar';
+    if(addBtn) { addBtn.disabled = false; addBtn.style.opacity = '1'; addBtn.title = ''; }
+    if(addVisitBtn) { addVisitBtn.disabled = false; addVisitBtn.style.opacity = '1'; }
+    if(uploadBtnDetail) { uploadBtnDetail.disabled = false; uploadBtnDetail.style.opacity = '1'; }
+    document.getElementById('previewOp').textContent = 'drg. Santi Rahayu';
+    roleToggle.textContent = 'Ganti ke Readonly (Suster)';
+    showToast('Mode write aktif — semua fitur tersedia');
+  }
+}
+
+// ── RENDER TABLE ──
+function renderTable(data) {
+  const tbody = document.getElementById('patientTableBody');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('rowCount').textContent = `Menampilkan ${data.length} pasien`;
+  if(data.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = data.map(p => `
+    <tr onclick="openDetail(${p.id})">
+      <td><div class="name-cell"><div class="av-sm" style="background:${p.color};color:${p.textColor};">${p.initials}</div><strong>${p.name}</strong></div></td>
+      <td><span class="mono">${p.rm}</span></td>
+      <td>${p.age} / ${p.jk}</td>
+      <td style="font-family:var(--mono);font-size:12px;">${p.phone}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2);">${p.dx}</td>
+      <td style="color:var(--text2);">${p.lastVisit}</td>
+      <td><span style="font-size:12px;color:var(--text2);">${p.cabang}</span></td>
+      <td>${badgeHtml(p.status)}</td>
+      <td><button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();openDetail(${p.id})">Lihat →</button></td>
+    </tr>`).join('');
+}
+
+function badgeHtml(s) {
+  const map = { 'Aktif':'badge-aktif','Baru':'badge-baru','Perlu Kontrol':'badge-kontrol' };
+  return `<span class="badge ${map[s]||'badge-aktif'}">${s}</span>`;
+}
+
+// ── FILTER ──
+function filterTable(q) {
+  q = q.toLowerCase();
+  const st = document.getElementById('filterStatus').value;
+  const cb = document.getElementById('filterCabang').value;
+  const filtered = patients.filter(p => {
+    const matchQ = !q || p.name.toLowerCase().includes(q) || p.rm.toLowerCase().includes(q) || p.phone.includes(q);
+    const matchS = !st || p.status === st;
+    const matchC = !cb || p.cabang === cb;
+    return matchQ && matchS && matchC;
+  });
+  renderTable(filtered);
+}
+
+// ── OPEN DETAIL ──
+function openDetail(id) {
+  currentPatient = patients.find(p => p.id === id);
+  if(!currentPatient) return;
+  const p = currentPatient;
+
+  document.getElementById('detAvatar').textContent = p.initials;
+  document.getElementById('detAvatar').style.background = p.color;
+  document.getElementById('detAvatar').style.color = p.textColor;
+  document.getElementById('detName').textContent = p.name;
+  document.getElementById('detRM').textContent = p.rm;
+  document.getElementById('detAge').textContent = `${p.age} tahun, ${p.jk === 'L' ? 'Laki-laki' : 'Perempuan'}`;
+  document.getElementById('detPhone').textContent = p.phone;
+  document.getElementById('detCabang').textContent = p.cabang;
+
+  document.getElementById('detChips').innerHTML = [
+    `<div class="info-chip">Alergi: <strong>${p.alergi}</strong></div>`,
+    `<div class="info-chip">Pekerjaan: <strong>${p.pekerjaan}</strong></div>`,
+    `<div class="info-chip">${badgeHtml(p.status)}</div>`,
+  ].join('');
+
+  // visits
+  document.getElementById('visitCount').textContent = `${p.visits.length} kunjungan`;
+  document.getElementById('visitList').innerHTML = p.visits.length ? p.visits.map(v => `
+    <div class="visit-item">
+      <div class="visit-date"><span>${v.date}</span></div>
+      <div class="visit-title">${v.title}</div>
+      <div class="visit-note">${v.note}</div>
+      <div class="visit-footer">
+        <span class="visit-cost">Rp ${v.cost.toLocaleString('id-ID')}</span>
+        <span class="visit-doctor">${v.doctor}${v.gigi !== '-' ? ' · Gigi ' + v.gigi : ''}</span>
+      </div>
+    </div>`).join('') : '<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px;">Belum ada riwayat kunjungan</div>';
+
+  // attachments
+  renderAttachments();
+
+  // financials
+  const total = p.visits.reduce((s,v) => s+v.cost, 0);
+  document.getElementById('finGrid').innerHTML = `
+    <div class="fin-card"><div class="fin-label">Total Biaya</div><div class="fin-val">Rp ${(total/1000).toFixed(0)}rb</div></div>
+    <div class="fin-card"><div class="fin-label">Kunjungan</div><div class="fin-val">${p.visits.length}x</div></div>
+    <div class="fin-card"><div class="fin-label">Lampiran</div><div class="fin-val">${p.attachments.length} file</div></div>
+    <div class="fin-card"><div class="fin-label">Rata-rata/Kunjungan</div><div class="fin-val">Rp ${p.visits.length ? (total/p.visits.length/1000).toFixed(0) : 0}rb</div></div>
+  `;
+
+  showPage('detail');
+}
+
+function renderAttachments() {
+  const p = currentPatient;
+  document.getElementById('attachList').innerHTML = p.attachments.length ? p.attachments.map(a => `
+    <div class="attach-item">
+      <div class="attach-icon ${a.type === 'PDF' ? 'attach-pdf' : 'attach-img'}">${a.type}</div>
+      <div><div class="attach-name">${a.name}</div><div class="attach-meta">${a.date} · ${a.size}</div></div>
+      <div class="attach-actions">
+        <button class="btn btn-sm" onclick="showToast('Membuka file: ${a.name}')">Buka</button>
+      </div>
+    </div>`).join('') : '<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px;">Belum ada lampiran</div>';
+}
+
+// ── UPLOAD SIMULATE ──
+const fileNames = ['foto_rontgen_baru.jpg','rekam_medis_lama.pdf','xray_lateral.jpg','lab_result.pdf','foto_klinis_terbaru.jpg','informed_consent_v2.pdf'];
+const fileSizes = ['0.8 MB','1.5 MB','2.1 MB','0.4 MB','1.2 MB','0.6 MB'];
+
+function simulateUpload() {
+  if(isReadonly) { showToast('Akses write diperlukan untuk upload'); return; }
+  const idx = (uploadCount - 1) % fileNames.length;
+  const fname = fileNames[idx];
+  const ext = fname.split('.').pop().toUpperCase();
+  const iconClass = (ext === 'JPG' || ext === 'PNG') ? 'attach-img' : 'attach-pdf';
+  const div = document.createElement('div');
+  div.className = 'attach-item';
+  div.innerHTML = `<div class="attach-icon ${iconClass}">${ext === 'JPG' ? 'IMG' : ext}</div><div><div class="attach-name">${fname}</div><div class="attach-meta">${fileSizes[idx]} · baru saja</div></div><div class="attach-actions"><button class="btn btn-sm btn-danger" style="height:26px;padding:0 8px;font-size:11px;" onclick="this.closest('.attach-item').remove();updateFileCount()">✕</button></div>`;
+  document.getElementById('uploadedList').appendChild(div);
+  uploadCount++;
+  updateFileCount();
+  showToast(`File "${fname}" berhasil diupload`);
+}
+
+function updateFileCount() {
+  const count = document.getElementById('uploadedList').children.length;
+  document.getElementById('previewFiles').textContent = count + ' file';
+}
+
+function simulateUploadDetail() {
+  if(isReadonly) { showToast('Akses write diperlukan untuk upload'); return; }
+  const idx = (uploadCountDetail - 1) % fileNames.length;
+  const fname = fileNames[idx];
+  const ext = fname.split('.').pop().toUpperCase();
+  currentPatient.attachments.push({ type: ext === 'JPG' || ext === 'PNG' ? 'IMG' : 'PDF', name: fname, size: fileSizes[idx], date: 'Baru saja' });
+  renderAttachments();
+  uploadCountDetail++;
+  showToast(`File "${fname}" berhasil diupload`);
+}
+
+// ── SAVE ──
+function savePatient() {
+  if(isReadonly) { showToast('Akses write diperlukan'); return; }
+  showToast('Data pasien berhasil disimpan!');
+  setTimeout(() => showPage('list'), 1200);
+}
+
+function formatBiaya(el) {
+  let v = el.value.replace(/\D/g,'');
+  if(v) el.value = parseInt(v).toLocaleString('id-ID');
+}
+
+// ── EXPORT ──
+function showExportModal() { document.getElementById('exportModal').classList.add('open'); }
+function closeModal() { document.getElementById('exportModal').classList.remove('open'); }
+function doExport() {
+  closeModal();
+  showToast('File data_pasien_april2025.xlsx berhasil didownload!');
+}
+
+function renderExportPreview() {
+  const tbody = document.getElementById('exportPreviewBody');
+  if(!tbody) return;
+  tbody.innerHTML = patients.slice(0,5).map(p => {
+    const lv = p.visits[0] || {};
+    return `<tr><td class="mono">${p.rm}</td><td>${p.name}</td><td style="color:var(--text2);">—</td><td class="mono">${p.phone}</td><td>${lv.date||'—'}</td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${lv.title||'—'}</td><td style="color:var(--text2);">—</td><td class="mono">${lv.cost ? lv.cost.toLocaleString('id-ID') : '—'}</td><td style="color:var(--text2);">${lv.doctor||'—'}</td><td>${p.cabang}</td></tr>`;
+  }).join('') + `<tr><td colspan="10" style="text-align:center;color:var(--text3);font-style:italic;">... dan 243 baris lainnya</td></tr>`;
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// close modal on overlay click
+document.getElementById('exportModal').addEventListener('click', function(e) {
+  if(e.target === this) closeModal();
+});
+
+init();
+</script>
+</body>
+</html>
